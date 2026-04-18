@@ -55,3 +55,21 @@ def add_field(field: str, value_func: Callable) -> Callable:
         return result
     transform.__name__ = f"add_field({field!r})"
     return transform
+
+
+def keep_fields(*fields: str) -> Callable:
+    """Return a step function that keeps only the specified keys in a dict.
+
+    This is the complement of drop_fields — useful when you want to whitelist
+    a small number of fields rather than blacklist many.
+
+    Example::
+
+        step = keep_fields('id', 'name')
+        step({'id': 1, 'name': 'Alice', 'password': 'secret'})
+        # {'id': 1, 'name': 'Alice'}
+    """
+    def transform(data: dict) -> dict:
+        return {k: v for k, v in data.items() if k in fields}
+    transform.__name__ = f"keep_fields({', '.join(repr(f) for f in fields)})"
+    return transform
