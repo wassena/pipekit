@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 
 def fanout(*steps: Callable[[Any], Any]) -> Callable[[Any], List[Any]]:
@@ -42,7 +42,7 @@ def fanout_dict(**named_steps: Callable[[Any], Any]) -> Callable[[Any], Dict[str
     return _run
 
 
-def merge(combiner: Callable[[List[Any]], Any] = None) -> Callable[[List[Any]], Any]:
+def merge(combiner: Optional[Callable[[List[Any]], Any]] = None) -> Callable[[List[Any]], Any]:
     """Return a step that merges a list of results (output of :func:`fanout`)
     using *combiner*.  Defaults to returning the list unchanged.
 
@@ -53,6 +53,11 @@ def merge(combiner: Callable[[List[Any]], Any] = None) -> Callable[[List[Any]], 
             merge(lambda results: {"a": results[0], "b": results[1]}),
         ])
     """
+    if combiner is not None and not callable(combiner):
+        raise TypeError(
+            "merge() expects a callable combiner, got {!r}".format(type(combiner).__name__)
+        )
+
     def _run(results: List[Any]) -> Any:
         if combiner is None:
             return results
