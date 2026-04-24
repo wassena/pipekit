@@ -41,6 +41,16 @@ from pipekit.cache import clear_all_cache
 clear_all_cache(".cache")
 ```
 
+### Checking cache status
+
+You can check whether a cached result already exists for a given set of arguments without triggering computation:
+
+```python
+expensive_step.is_cached([1, 2, 3])  # returns True or False
+```
+
+This is useful for inspecting pipeline state or conditionally skipping steps in workflows.
+
 ## Notes
 
 - Cache keys are based on the function name and a JSON-serialised representation of arguments.
