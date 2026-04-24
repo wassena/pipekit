@@ -31,9 +31,17 @@ def transform_batch(batch):
 
 
 skipped = []
+error_log = []
 
 
 def on_error(exc, chunk):
+    """Handle a failed batch by logging the error and collecting skipped records.
+
+    Args:
+        exc: The exception raised during batch processing.
+        chunk: The list of records in the failed batch.
+    """
+    error_log.append({"error": str(exc), "batch_size": len(chunk)})
     print(f"[warn] skipping batch of {len(chunk)} due to: {exc}")
     skipped.extend(chunk)
 
@@ -51,3 +59,8 @@ for r in results:
 
 if skipped:
     print(f"Skipped {len(skipped)} records.")
+
+if error_log:
+    print(f"Encountered {len(error_log)} batch error(s):")
+    for entry in error_log:
+        print(f"  - {entry['error']} (batch size: {entry['batch_size']})")
