@@ -64,6 +64,31 @@ pipeline = Pipeline([
 
 ---
 
+## `enrich_rename(field, new_field, *, keep_original=False)`
+
+Rename a field on every record, optionally keeping the original key.
+
+```python
+from pipekit.enrich import enrich_rename
+
+records = [{"ts": "2024-01-01", "val": 42}]
+
+step = enrich_rename("ts", "timestamp")
+result = step(records)
+# [{"timestamp": "2024-01-01", "val": 42}]
+```
+
+Set `keep_original=True` to retain the old key alongside the new one:
+
+```python
+step = enrich_rename("ts", "timestamp", keep_original=True)
+# [{"ts": "2024-01-01", "timestamp": "2024-01-01", "val": 42}]
+```
+
+> **Note:** Records that do not contain the specified field are passed through unchanged.
+
+---
+
 ## Composing enrichment steps
 
 All three helpers return plain callables compatible with `Pipeline`:
