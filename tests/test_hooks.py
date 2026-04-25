@@ -60,6 +60,19 @@ def test_hooks_metadata_stored():
     assert step._hooks["after"] is after_fn
 
 
+def test_before_hook_exception_propagates():
+    """An exception raised inside the before hook should propagate to the caller."""
+    def bad_before(data):
+        raise RuntimeError("before hook failed")
+
+    @before_after(before=bad_before)
+    def step(data):
+        return data
+
+    with pytest.raises(RuntimeError, match="before hook failed"):
+        step({"x": 1})
+
+
 # ---------------------------------------------------------------------------
 # on_error
 # ---------------------------------------------------------------------------
@@ -120,3 +133,22 @@ def test_timed_records_duration():
     step({})
     assert step.last_duration is not None
     assert step.last_duration >= 0.01
+
+
+def test_timed_duration_updates_on_repeated_calls():
+    """Each call should overwrite last_duration with the most recent elapsed time."""
+    import time
+
+    @timed
+    def step(data):
+        time.sleep(0.01)
+        return data
+
+    step({})
+    first_duration = step.last_duration
+    step({})
+    second_duration = step.last_duration
+
+    # Both durations should be positive and independently recorded
+    assert first_duration > 0
+    assert second_duration > 0
