@@ -69,6 +69,11 @@ def test_throttle_preserves_function_name():
     assert my_step.__name__ == "my_step"
 
 
+def test_debounce_raises_on_zero_wait():
+    with pytest.raises(ValueError):
+        debounce(0)
+
+
 def test_debounce_raises_on_negative_wait():
     with pytest.raises(ValueError):
         debounce(-0.1)
