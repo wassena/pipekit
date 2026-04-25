@@ -49,6 +49,29 @@ def left_join(
     return result
 
 
+def full_join(
+    left: List[Dict],
+    right: List[Dict],
+    on: str,
+    suffixes: tuple = ("_left", "_right"),
+) -> List[Dict]:
+    """Return all records from both left and right, with None for missing matches.
+
+    Records that match on the *on* key are merged; unmatched left records have
+    None for right-side fields, and unmatched right records have None for
+    left-side fields.
+    """
+    result = left_join(left, right, on=on, suffixes=suffixes)
+
+    left_keys = {rec.get(on) for rec in left}
+    null_left = {k: None for k in _right_keys(left, on)}
+    for right_rec in right:
+        if right_rec.get(on) not in left_keys:
+            result.append({**null_left, **right_rec})
+
+    return result
+
+
 def join_step(
     right: List[Dict],
     on: str,
@@ -56,12 +79,14 @@ def join_step(
     suffixes: tuple = ("_left", "_right"),
 ) -> Callable[[List[Dict]], List[Dict]]:
     """Return a pipeline-compatible step that joins incoming data with *right*."""
-    if how not in ("inner", "left"):
-        raise ValueError(f"Unsupported join type: {how!r}. Use 'inner' or 'left'.")
+    if how not in ("inner", "left", "full"):
+        raise ValueError(f"Unsupported join type: {how!r}. Use 'inner', 'left', or 'full'.")
 
     def transform(data: List[Dict]) -> List[Dict]:
         if how == "inner":
             return inner_join(data, right, on=on, suffixes=suffixes)
+        if how == "full":
+            return full_join(data, right, on=on, suffixes=suffixes)
         return left_join(data, right, on=on, suffixes=suffixes)
 
     transform.__name__ = f"join_step({how}, on={on!r})"
